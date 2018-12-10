@@ -1,0 +1,6 @@
+*.test
+.dbg_history
+.idea
+.vscode
+.history
+tmp
