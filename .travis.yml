@@ -1,0 +1,20 @@
+sudo: false
+
+language: go
+
+env:
+  # Force-enable Go modules. This will be unnecessary when Go 1.12 lands.
+  - GO111MODULE=on
+
+go:
+  - 1.11.x
+
+git:
+  # Only clone the most recent commit.
+  depth: 1
+
+notifications:
+  email: true
+
+script:
+  - go test -v ./...
