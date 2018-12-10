@@ -17,4 +17,4 @@ notifications:
   email: true
 
 script:
-  - go test -v ./...
+  - make
