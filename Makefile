@@ -1,7 +1,9 @@
+GO111MODULE=on
+
 all: test
 
 test:
-	@go test -v -race ./...
+	@go test -mod=vendor -v -race ./...
 
 fmt:
 	@go fmt ./...

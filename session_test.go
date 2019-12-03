@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ajankovic/smpp"
-	"github.com/ajankovic/smpp/mock"
+	"github.com/ajankovic/smpp/internal/mock"
 	"github.com/ajankovic/smpp/pdu"
 )
 
