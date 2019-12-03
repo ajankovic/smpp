@@ -52,7 +52,7 @@ func (te *testEncoder) i(p pdu.PDU, status ...pdu.Status) []byte {
 	if len(status) > 0 {
 		st = status[0]
 	}
-	_, err := te.enc.Encode(p, st)
+	_, err := te.enc.Encode(p, pdu.EncodeStatus(st))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -69,7 +69,7 @@ func (te *testEncoder) s(p pdu.PDU, status ...pdu.Status) []byte {
 		st = status[0]
 	}
 	te.seq.skipNext()
-	_, err := te.enc.Encode(p, st)
+	_, err := te.enc.Encode(p, pdu.EncodeStatus(st))
 	if err != nil {
 		panic(err.Error())
 	}

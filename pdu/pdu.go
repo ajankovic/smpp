@@ -247,25 +247,52 @@ func NewEncoder(w io.Writer, seq Sequencer) *Encoder {
 	}
 }
 
+type encoderOpts struct {
+	seq    uint32
+	status Status
+}
+
 // Encode PDU structure and write it to the assigned writer.
-func (en *Encoder) Encode(p PDU, status Status) (uint32, error) {
+func (en *Encoder) Encode(p PDU, opts ...EncoderOption) (uint32, error) {
+	// TODO consider introducing convention where pdu.MarshalBinary
+	// should return slice with prepended space for header to avoid
+	// allocation and copy.
 	body, err := p.MarshalBinary()
 	if err != nil {
 		return 0, err
 	}
+
+	eOpts := encoderOpts{}
+	for _, o := range opts {
+		o(&eOpts)
+	}
+
 	l := len(body) + 16
-	// TODO consider introducing convention where pdu.MarshalBinary
-	// should return slice with prepended space for header to avoid
-	// allocation and copy.
-	seq := en.seq.Next()
 	buf := make([]byte, l)
 	binary.BigEndian.PutUint32(buf[:4], uint32(l))
 	binary.BigEndian.PutUint32(buf[4:8], uint32(p.CommandID()))
-	binary.BigEndian.PutUint32(buf[8:12], uint32(status))
-	binary.BigEndian.PutUint32(buf[12:16], seq)
+	binary.BigEndian.PutUint32(buf[8:12], uint32(eOpts.status))
+	if eOpts.seq == 0 {
+		eOpts.seq = en.seq.Next()
+	}
+	binary.BigEndian.PutUint32(buf[12:16], eOpts.seq)
 	copy(buf[16:], body)
 	_, err = en.w.Write(buf)
-	return seq, err
+	return eOpts.seq, err
+}
+
+type EncoderOption func(*encoderOpts)
+
+func EncodeSeq(seq uint32) EncoderOption {
+	return func(eOpts *encoderOpts) {
+		eOpts.seq = seq
+	}
+}
+
+func EncodeStatus(status Status) EncoderOption {
+	return func(eOpts *encoderOpts) {
+		eOpts.status = status
+	}
 }
 
 // Decoder reads input from reader and marshals it into PDU.
@@ -431,7 +458,7 @@ func SystemID(p PDU) string {
 
 // SeparateUDH takes input bytes and separates them into UDH header and content.
 func SeparateUDH(c []byte) ([]byte, []byte, error) {
-	if c == nil || len(c) == 0 {
+	if len(c) == 0 {
 		return nil, c, errors.New("smpp: invalid udh length")
 	}
 	l := int(c[0])

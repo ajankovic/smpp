@@ -74,7 +74,7 @@ func newBindingServer() *mockServer {
 				res = &pdu.UnbindResp{}
 			}
 			b.Reset()
-			if _, err := e.Encode(res, pdu.StatusOK); err != nil {
+			if _, err := e.Encode(res); err != nil {
 				panic("Can't encode pdu")
 			}
 			return b.Bytes()

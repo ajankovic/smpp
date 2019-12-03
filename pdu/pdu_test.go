@@ -209,6 +209,15 @@ var codingTT = []struct {
 		false,
 	},
 	{
+		"submit_sm with sequence number",
+		"0000002D|00000004|00000000|00000004",
+		nil,
+		0,
+		StatusOK,
+		4,
+		false,
+	},
+	{
 		"unbind with empty body",
 		"00000010|00000006|00000000|00000001",
 		nil,
@@ -242,7 +251,12 @@ func TestPDUEncoding(t *testing.T) {
 		t.Run(row.desc, func(t *testing.T) {
 			buf := bytes.NewBuffer(nil)
 			enc := NewEncoder(buf, row.sequencer)
-			i, err := enc.Encode(pduTT[row.pduIndex].pdu, row.status)
+
+			opts := []EncoderOption{EncodeStatus(row.status)}
+			if row.sequencer == nil {
+				opts = append(opts, EncodeSeq(row.seq))
+			}
+			i, err := enc.Encode(pduTT[row.pduIndex].pdu, opts...)
 			if err != nil {
 				if !row.err {
 					t.Fatalf("unexpected error %s", err)

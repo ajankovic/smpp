@@ -13,6 +13,7 @@ type Context struct {
 	sess   *Session
 	status pdu.Status
 	ctx    context.Context
+	seq    uint32
 	req    pdu.PDU
 	resp   pdu.PDU
 	close  bool
@@ -38,7 +39,7 @@ func (ctx *Context) RemoteAddr() string {
 	return ctx.sess.remoteAddr()
 }
 
-// Context returns regular Go context.
+// Context returns Go standard library context.
 func (ctx *Context) Context() context.Context {
 	return ctx.ctx
 }
@@ -62,7 +63,7 @@ func (ctx *Context) Respond(resp pdu.PDU, status pdu.Status) error {
 		ctx.sess.mu.Unlock()
 		return err
 	}
-	if _, err := ctx.sess.enc.Encode(resp, status); err != nil {
+	if _, err := ctx.sess.enc.Encode(resp, pdu.EncodeStatus(status), pdu.EncodeSeq(ctx.seq)); err != nil {
 		ctx.sess.conf.Logger.ErrorF("error encoding pdu: %s %+v", ctx.sess, err)
 		ctx.sess.mu.Unlock()
 		return err

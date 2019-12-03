@@ -257,11 +257,11 @@ func (sess *Session) serve() {
 		if pdu.IsRequest(h.CommandID()) {
 			sess.conf.Logger.InfoF("received request: %s %s%+v", sess, p.CommandID(), p)
 			if sess.reqCount == sess.conf.ReqWinSize {
-				sess.throttle()
+				sess.throttle(h.Sequence())
 			} else {
 				sess.wg.Add(1)
 				sess.reqCount++
-				go sess.handleRequest(ctx, p)
+				go sess.handleRequest(ctx, h, p)
 			}
 			sess.mu.Unlock()
 			continue
@@ -283,15 +283,15 @@ func (sess *Session) serve() {
 	}
 }
 
-func (sess *Session) throttle() {
+func (sess *Session) throttle(seq uint32) {
 	resp := pdu.GenericNack{}
-	if _, err := sess.enc.Encode(resp, pdu.StatusThrottled); err != nil {
+	if _, err := sess.enc.Encode(resp, pdu.EncodeStatus(pdu.StatusThrottled), pdu.EncodeSeq(seq)); err != nil {
 		sess.conf.Logger.ErrorF("error encoding pdu: %s %+v", sess, err)
 		return
 	}
 }
 
-func (sess *Session) handleRequest(ctx context.Context, req pdu.PDU) {
+func (sess *Session) handleRequest(ctx context.Context, h pdu.Header, req pdu.PDU) {
 	ctx, cancel := context.WithTimeout(ctx, sess.conf.WindowTimeout)
 	defer func() {
 		cancel()
@@ -303,6 +303,7 @@ func (sess *Session) handleRequest(ctx context.Context, req pdu.PDU) {
 	sessCtx := &Context{
 		sess: sess,
 		ctx:  ctx,
+		seq:  h.Sequence(),
 		req:  req,
 	}
 	sess.conf.Handler.ServeSMPP(sessCtx)
@@ -396,7 +397,7 @@ func (sess *Session) Send(ctx context.Context, req pdu.PDU) (pdu.PDU, error) {
 		sess.mu.Unlock()
 		return nil, err
 	}
-	seq, err := sess.enc.Encode(req, pdu.StatusOK)
+	seq, err := sess.enc.Encode(req)
 	if err != nil {
 		sess.mu.Unlock()
 		return nil, err
