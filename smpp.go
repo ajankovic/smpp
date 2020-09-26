@@ -1,7 +1,7 @@
 // Package smpp implements SMPP protocol v3.4.
 //
 // It allows easier creation of SMPP clients and servers by providing utilities for PDU and session handling.
-// In order to do any kind of interaction you first need to create an SMPP [Session](https://godoc.org/github.com/ajankovic/smpp#Session). Session is the main carrier of the protocol and enforcer of the specification rules.
+// In order to do any kind of interaction you first need to create an SMPP [Session](https://godoc.org/github.com/daominah/smpp#Session). Session is the main carrier of the protocol and enforcer of the specification rules.
 //
 // Naked session can be created with:
 //
@@ -53,7 +53,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/ajankovic/smpp/pdu"
+	"github.com/daominah/smpp/pdu"
 )
 
 const (

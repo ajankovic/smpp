@@ -4,7 +4,7 @@ import (
 	"testing"
 	gotime "time"
 
-	"github.com/ajankovic/smpp/time"
+	"github.com/daominah/smpp/time"
 )
 
 func TestParseRelative(t *testing.T) {
