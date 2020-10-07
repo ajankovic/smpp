@@ -6,12 +6,12 @@
 // Naked session can be created with:
 //
 //     // You must provide already established connection and configuration struct.
-//     sess := smpp.NewSession(conn, conf)
+//     Sess := smpp.NewSession(conn, conf)
 //
 // But it's much more convenient to use helpers that would do the binding with the remote SMSC and return you session prepared for sending:
 //
 //     // Bind with remote server by providing config structs.
-//     sess, err := smpp.BindTRx(sessConf, bindConf)
+//     Sess, err := smpp.BindTRx(sessConf, bindConf)
 //
 // And once you have the session it can be used for sending PDUs to the binded peer.
 //
@@ -21,11 +21,11 @@
 //         ShortMessage:    "Hello from SMPP!",
 //     }
 //     // Session can then be used for sending PDUs.
-//     resp, err := sess.Send(p)
+//     resp, err := Sess.Send(p)
 //
 // Session that is no longer used must be closed:
 //
-//     sess.Close()
+//     Sess.Close()
 //
 // If you want to handle incoming requests to the session specify SMPPHandler in session configuration when creating new session similarly to HTTPHandler from _net/http_ package:
 //

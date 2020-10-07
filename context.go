@@ -10,7 +10,7 @@ import (
 
 // Context represents container for SMPP request related information.
 type Context struct {
-	sess   *Session
+	Sess   *Session
 	status pdu.Status
 	ctx    context.Context
 	seq    uint32
@@ -25,12 +25,12 @@ func (ctx *Context) DebugReq() string {
 
 // SystemID returns SystemID of the bounded peer that request came from.
 func (ctx *Context) SystemID() string {
-	return ctx.sess.conf.SystemID
+	return ctx.Sess.conf.SystemID
 }
 
 // SessionID returns ID of the session that this context is responsible for handling this request.
 func (ctx *Context) SessionID() string {
-	return ctx.sess.ID()
+	return ctx.Sess.ID()
 }
 
 // CommandID returns ID of the PDU request.
@@ -40,7 +40,7 @@ func (ctx *Context) CommandID() pdu.CommandID {
 
 // RemoteAddr returns IP address of the bounded peer.
 func (ctx *Context) RemoteAddr() string {
-	return ctx.sess.remoteAddr()
+	return ctx.Sess.remoteAddr()
 }
 
 // Context returns Go standard library context.
@@ -61,19 +61,19 @@ func (ctx *Context) Respond(resp pdu.PDU, status pdu.Status) error {
 		return errors.New("smpp: responding with nil PDU")
 	}
 
-	ctx.sess.mu.Lock()
-	if err := ctx.sess.makeTransition(resp.CommandID(), false); err != nil {
-		ctx.sess.conf.Logger.ErrorF("transitioning resp pdu: %s %+v", ctx.sess, err)
-		ctx.sess.mu.Unlock()
+	ctx.Sess.mu.Lock()
+	if err := ctx.Sess.makeTransition(resp.CommandID(), false); err != nil {
+		ctx.Sess.conf.Logger.ErrorF("transitioning resp pdu: %s %+v", ctx.Sess, err)
+		ctx.Sess.mu.Unlock()
 		return err
 	}
-	if _, err := ctx.sess.enc.Encode(resp, pdu.EncodeStatus(status), pdu.EncodeSeq(ctx.seq)); err != nil {
-		ctx.sess.conf.Logger.ErrorF("error encoding pdu: %s %+v", ctx.sess, err)
-		ctx.sess.mu.Unlock()
+	if _, err := ctx.Sess.enc.Encode(resp, pdu.EncodeStatus(status), pdu.EncodeSeq(ctx.seq)); err != nil {
+		ctx.Sess.conf.Logger.ErrorF("error encoding pdu: %s %+v", ctx.Sess, err)
+		ctx.Sess.mu.Unlock()
 		return err
 	}
-	ctx.sess.conf.Logger.InfoF("sent response: %s %s %+v", ctx.sess, resp.CommandID(), resp)
-	ctx.sess.mu.Unlock()
+	ctx.Sess.conf.Logger.InfoF("sent response: %s %s %+v", ctx.Sess, resp.CommandID(), resp)
+	ctx.Sess.mu.Unlock()
 
 	return nil
 }
