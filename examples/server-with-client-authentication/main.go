@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
-	"strings"
 	"github.com/ajankovic/smpp"
 	"github.com/ajankovic/smpp/pdu"
+	"os"
+	"strings"
 )
 
 var (
