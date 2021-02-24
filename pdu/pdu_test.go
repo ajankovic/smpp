@@ -3,9 +3,11 @@ package pdu
 import (
 	"bytes"
 	"encoding/hex"
+	"net"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 var pduTT = []struct {
@@ -297,6 +299,63 @@ func TestPDUDecoding(t *testing.T) {
 			if !reflect.DeepEqual(p, pduTT[row.pduIndex].pdu) {
 				t.Errorf("Decode() => pdu\n%+v\nexpected \n%+v", p, pduTT[row.pduIndex].pdu)
 			}
+		})
+	}
+}
+
+func TestPDUDecodingIncompleteBuffers(t *testing.T) {
+
+	var pdus []byte
+	mtu := 8 // Likely e.g. 1500 in the real world
+
+	for _, row := range codingTT {
+		pduBytes, _ := hex.DecodeString(toHexStr(row.headerHex + pduTT[row.pduIndex].hexStr))
+		pdus = append(pdus, pduBytes...)
+	}
+
+	buf, wr := net.Pipe()
+	dec := NewDecoder(buf)
+
+	go func() {
+		for i := 0; i < len(pdus); {
+
+			j := i + mtu
+			if j > len(pdus) {
+				j = len(pdus)
+			}
+			time.Sleep(time.Millisecond * 10) // Similulate some network (rather than coordinate with .Decode() for the purpose of this test)
+			_, err := wr.Write(pdus[i:j])
+			if err != nil {
+				panic("error writing to net.Pipe")
+			}
+			i = j
+		}
+
+		wr.Close()
+	}()
+
+	for _, row := range codingTT {
+		t.Run(row.desc, func(t *testing.T) {
+
+			h, p, err := dec.Decode()
+
+			if err != nil {
+				if !row.err {
+					t.Fatalf("unexpected error %s", err)
+				}
+				return
+			}
+
+			if h.Sequence() != row.seq {
+				t.Errorf("Decode() => seq %d expected %d", h.Sequence(), row.seq)
+			}
+			if h.Status() != row.status {
+				t.Errorf("Decode() => status %d expected %d", h.Status(), row.status)
+			}
+			if !reflect.DeepEqual(p, pduTT[row.pduIndex].pdu) {
+				t.Errorf("Decode() => pdu\n%+v\nexpected \n%+v", p, pduTT[row.pduIndex].pdu)
+			}
+
 		})
 	}
 }
