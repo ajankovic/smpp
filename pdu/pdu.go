@@ -319,7 +319,7 @@ func (d *Decoder) Decode() (Header, PDU, error) {
 	if err := header.UnmarshalBinary(headerBytes[:]); err != nil {
 		return header, nil, err
 	}
-	// TODO: || header.length > data.MAX_PDU_LEN
+
 	if header.length < 16 {
 		return header, nil, fmt.Errorf("smpp: invalid pdu header byte length: %d", header.length)
 	}
