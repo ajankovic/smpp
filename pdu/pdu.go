@@ -310,36 +310,40 @@ func NewDecoder(r io.Reader) *Decoder {
 // Decode reads data from reader and populates PDU.
 func (d *Decoder) Decode() (Header, PDU, error) {
 	// Read header first.
-	h := make([]byte, 16)
-	n, err := d.r.Read(h)
-	if err != nil {
+	var headerBytes [16]byte
+	if _, err := io.ReadFull(d.r, headerBytes[:]); err != nil {
 		return nil, nil, err
 	}
-	if n != 16 {
-		return nil, nil, errors.New("smpp: invalid pdu header byte length")
+
+	header := &header{}
+	if err := header.UnmarshalBinary(headerBytes[:]); err != nil {
+		return header, nil, err
 	}
-	he := &header{}
-	if err := he.UnmarshalBinary(h); err != nil {
-		return nil, nil, err
+
+	if header.length < 16 {
+		return header, nil, fmt.Errorf("smpp: invalid pdu header byte length: %d", header.length)
 	}
-	p := NewPDU(he.commandID)
-	if he.length == 16 {
-		return he, p, nil
+
+	pdu := NewPDU(header.commandID)
+	if header.length == 16 {
+		// not expecting body to read - we're done.
+		return header, pdu, nil
 	}
 
 	// Read rest of the PDU.
-	buf := make([]byte, he.length-16)
-	n, err = d.r.Read(buf)
-	if err != nil {
-		return he, nil, err
+	bodyBytes := make([]byte, header.length-16)
+	if len(bodyBytes) > 0 {
+		if _, err := io.ReadFull(d.r, bodyBytes); err != nil {
+			return header, pdu, fmt.Errorf("smpp: pdu length doesn't match read body length %d != %d", header.length, len(bodyBytes))
+		}
 	}
-	if n != int(he.length-16) {
-		return he, nil, fmt.Errorf("smpp: pdu length doesn't match read body length %d != %d", he.length, n)
+
+	// Unmarshal binary
+	if err := pdu.UnmarshalBinary(bodyBytes); err != nil {
+		return header, pdu, err
 	}
-	if err := p.UnmarshalBinary(buf); err != nil {
-		return he, nil, err
-	}
-	return he, p, nil
+
+	return header, pdu, nil
 }
 
 // NewPDU creates new PDU from CommandID.
