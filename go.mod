@@ -1,3 +1,3 @@
-module github.com/daominah/smpp
+module github.com/ajankovic/smpp
 
 go 1.14
