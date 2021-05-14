@@ -30,11 +30,11 @@ type Server struct {
 	Addr        string
 	SessionConf *SessionConf
 
-	wg         sync.WaitGroup
-	mu         sync.Mutex
-	listeners  map[net.Listener]struct{}
-	doneChan   chan struct{}
-	activeSess map[*Session]struct{}
+	wg           sync.WaitGroup
+	mu           sync.Mutex
+	listeners    map[net.Listener]struct{}
+	doneChan     chan struct{}
+	EsmeSessions map[string]*Session
 }
 
 // NewServer creates new SMPP server for managing SMSC sessions.
@@ -109,7 +109,7 @@ func (srv *Server) Serve(ln net.Listener) error {
 // Unbind gracefully closes server by sending Unbind requests to all connected peers.
 func (srv *Server) Unbind(ctx context.Context) error {
 	srv.mu.Lock()
-	for sess := range srv.activeSess {
+	for _, sess := range srv.EsmeSessions {
 		Unbind(ctx, sess)
 	}
 	srv.mu.Unlock()
@@ -159,7 +159,7 @@ func (srv *Server) trackListener(ln net.Listener, add bool) {
 	if add {
 		// If the *Server is being reused after a previous
 		// Close or Shutdown, reset its doneChan:
-		if len(srv.listeners) == 0 && len(srv.activeSess) == 0 {
+		if len(srv.listeners) == 0 && len(srv.EsmeSessions) == 0 {
 			srv.doneChan = nil
 		}
 		srv.listeners[ln] = struct{}{}
@@ -182,12 +182,12 @@ func (srv *Server) closeListenersLocked() error {
 func (srv *Server) trackSess(sess *Session, add bool) {
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
-	if srv.activeSess == nil {
-		srv.activeSess = make(map[*Session]struct{})
+	if srv.EsmeSessions == nil {
+		srv.EsmeSessions = make(map[string]*Session)
 	}
 	if add {
-		srv.activeSess[sess] = struct{}{}
+		srv.EsmeSessions[sess.ID()] = sess
 	} else {
-		delete(srv.activeSess, sess)
+		delete(srv.EsmeSessions, sess.ID())
 	}
 }
