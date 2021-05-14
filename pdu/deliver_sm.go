@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	smpptime "github.com/daominah/smpp/time"
+	smpptime "github.com/ajankovic/smpp/time"
 )
 
 // DeliverSm contains mandatory fields for delivering short message.

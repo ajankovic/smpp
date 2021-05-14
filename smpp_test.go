@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/daominah/smpp"
-	"github.com/daominah/smpp/pdu"
+	"github.com/ajankovic/smpp"
+	"github.com/ajankovic/smpp/pdu"
 )
 
 type mockServer struct {
