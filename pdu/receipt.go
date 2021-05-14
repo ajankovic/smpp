@@ -48,15 +48,26 @@ var DelStatMap = map[uint8]DelStat{
 func (dr *DeliveryReceipt) String() string {
 	return fmt.Sprintf(
 		"id:%s sub:%s dlvrd:%s submit date:%s done date:%s stat:%s err:%s text:%s",
-		dr.Id, dr.Sub, dr.Dlvrd, dr.SubmitDate.Format(recDateLayout), dr.DoneDate.Format(recDateLayout), dr.Stat, dr.Err, dr.Text,
+		dr.Id, dr.Sub, dr.Dlvrd, dr.SubmitDate.Format(RecDateLayout), dr.DoneDate.Format(RecDateLayout), dr.Stat, dr.Err, dr.Text,
 	)
 }
 
 var deliveryReceipt = regexp.MustCompile(`(\w+ ?\w+)+:([\w\-]+)`)
 
 // YYMMDDhhmm
-var recDateLayout = "0601021504"
-var secRecDateLayout = "060102150405"
+var RecDateLayout = "0601021504"
+var SecRecDateLayout = "060102150405"
+
+var dateFormats = []string{"20060102150405", "0601021504", "060102150405"}
+
+func ParseDateTime(value string) (time.Time, error) {
+	for _, df := range dateFormats {
+		if result, err := time.ParseInLocation(value, df, time.Local); err == nil {
+			return result, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("unable to parse time %s", value)
+}
 
 // ParseDeliveryReceipt parses delivery receipt format defined in smpp 3.4 specification
 func ParseDeliveryReceipt(sm string) (*DeliveryReceipt, error) {
@@ -95,24 +106,18 @@ func ParseDeliveryReceipt(sm string) (*DeliveryReceipt, error) {
 			if m[1] != "submit date" {
 				return nil, e
 			}
-			t, err := time.Parse(recDateLayout, m[2])
+			t, err := ParseDateTime(m[2])
 			if err != nil {
-				t, err = time.Parse(secRecDateLayout, m[2])
-				if err != nil {
-					return nil, e
-				}
+				return nil, e
 			}
 			delRec.SubmitDate = t
 		case 4:
 			if m[1] != "done date" {
 				return nil, e
 			}
-			t, err := time.Parse(recDateLayout, m[2])
+			t, err := ParseDateTime(m[2])
 			if err != nil {
-				t, err = time.Parse(secRecDateLayout, m[2])
-				if err != nil {
-					return nil, e
-				}
+				return nil, e
 			}
 			delRec.DoneDate = t
 		case 5:

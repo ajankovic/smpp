@@ -34,6 +34,8 @@ func Parse(in []byte) (gotime.Time, error) {
 	case 12:
 		// simple seconds
 		return gotime.Parse("060102150405", string(in))
+	case 14:
+		return gotime.Parse("20060102150405", string(in))
 	case 10:
 		// simple minutes
 		return gotime.Parse("0601021504", string(in))
