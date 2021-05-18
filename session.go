@@ -124,10 +124,11 @@ func genSessionID() string {
 	return fmt.Sprintf("%X-%X-%X", b[0:4], b[4:6], b[6:8])
 }
 
-// RemoteAddresser is an abstraction to keep Session from depending
+// NetworkAddresser is an abstraction to keep Session from depending
 // on network connection.
-type RemoteAddresser interface {
+type NetworkAddresser interface {
 	RemoteAddr() net.Addr
+	LocalAddr() net.Addr
 }
 
 // SessionConf structured session configuration.
@@ -223,8 +224,15 @@ func (sess *Session) String() string {
 }
 
 func (sess *Session) remoteAddr() string {
-	if ra, ok := sess.rwc.(RemoteAddresser); ok {
+	if ra, ok := sess.rwc.(NetworkAddresser); ok {
 		return ra.RemoteAddr().String()
+	}
+	return ""
+}
+
+func (sess *Session) localAddr() string {
+	if ra, ok := sess.rwc.(NetworkAddresser); ok {
+		return ra.LocalAddr().String()
 	}
 	return ""
 }

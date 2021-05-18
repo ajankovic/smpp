@@ -1,6 +1,7 @@
 package pdu
 
 import (
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -29,6 +30,7 @@ type SubmitSm struct {
 	DataCoding           int
 	SmDefaultMsgID       int
 	ShortMessage         string
+	ShortMessageHex      string
 	Options              *Options
 }
 
@@ -70,6 +72,11 @@ func (p SubmitSm) MarshalBinary() ([]byte, error) {
 	out = append(out, p.RegisteredDelivery.Byte(), byte(p.ReplaceIfPresentFlag), byte(p.DataCoding), byte(p.SmDefaultMsgID), byte(l))
 	if l > 0 {
 		out = append(out, []byte(p.ShortMessage)...)
+	}
+	if len(p.ShortMessageHex) > 0 {
+		if hexbytes, err := hex.DecodeString(p.ShortMessageHex); err == nil {
+			out = append(out, hexbytes...)
+		}
 	}
 	if p.Options == nil {
 		return out, nil

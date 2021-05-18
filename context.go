@@ -43,6 +43,11 @@ func (ctx *Context) RemoteAddr() string {
 	return ctx.Sess.remoteAddr()
 }
 
+// LocalAddr returns IP address of the bounded peer.
+func (ctx *Context) LocalAddr() string {
+	return ctx.Sess.localAddr()
+}
+
 // Context returns Go standard library context.
 func (ctx *Context) Context() context.Context {
 	return ctx.ctx
