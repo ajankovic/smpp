@@ -40,12 +40,12 @@ func (ctx *Context) CommandID() pdu.CommandID {
 
 // RemoteAddr returns IP address of the bounded peer.
 func (ctx *Context) RemoteAddr() string {
-	return ctx.Sess.remoteAddr()
+	return ctx.Sess.RemoteAddr()
 }
 
 // LocalAddr returns IP address of the bounded peer.
 func (ctx *Context) LocalAddr() string {
-	return ctx.Sess.localAddr()
+	return ctx.Sess.LocalAddr()
 }
 
 // Context returns Go standard library context.

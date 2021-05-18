@@ -223,14 +223,14 @@ func (sess *Session) String() string {
 	return fmt.Sprintf("(%s:%s:%s)", sess.conf.Type, sess.SystemID(), sess.conf.ID)
 }
 
-func (sess *Session) remoteAddr() string {
+func (sess *Session) RemoteAddr() string {
 	if ra, ok := sess.rwc.(NetworkAddresser); ok {
 		return ra.RemoteAddr().String()
 	}
 	return ""
 }
 
-func (sess *Session) localAddr() string {
+func (sess *Session) LocalAddr() string {
 	if ra, ok := sess.rwc.(NetworkAddresser); ok {
 		return ra.LocalAddr().String()
 	}
