@@ -68,15 +68,17 @@ func (p SubmitSm) MarshalBinary() ([]byte, error) {
 		return nil, err
 	}
 	out = append(out, tm...)
-	l := len(p.ShortMessage)
-	out = append(out, p.RegisteredDelivery.Byte(), byte(p.ReplaceIfPresentFlag), byte(p.DataCoding), byte(p.SmDefaultMsgID), byte(l))
-	if l > 0 {
-		out = append(out, []byte(p.ShortMessage)...)
-	}
+	out = append(out, p.RegisteredDelivery.Byte(), byte(p.ReplaceIfPresentFlag), byte(p.DataCoding), byte(p.SmDefaultMsgID))
 	if len(p.ShortMessageHex) > 0 {
 		if hexbytes, err := hex.DecodeString(p.ShortMessageHex); err == nil {
+			out = append(out, byte(len(hexbytes)))
 			out = append(out, hexbytes...)
 		}
+	} else if len(p.ShortMessage) > 0 {
+		out = append(out, byte(len(p.ShortMessage)))
+		out = append(out, []byte(p.ShortMessage)...)
+	} else {
+		out = append(out, byte(0))
 	}
 	if p.Options == nil {
 		return out, nil
